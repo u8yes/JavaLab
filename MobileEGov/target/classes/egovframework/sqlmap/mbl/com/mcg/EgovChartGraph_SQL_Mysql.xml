@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ChartGraph">
+
+	<typeAlias  alias="egovMap" type="org.egovframe.rte.psl.dataaccess.util.EgovMap"/>
+	<typeAlias  alias="ChartGraphVO" type="egovframework.mbl.com.mcg.service.ChartGraphVO"/>	
+
+	<resultMap id="ChartGraph" class="egovframework.mbl.com.mcg.service.ChartGraph">
+		<result property="sn" 		column="SN" 		columnIndex="1"/>
+		<result property="mberId" 		column="MBER_ID" 		columnIndex="2"/>
+		<result property="xaxis" 		column="XAXIS" 		columnIndex="3"/>
+		<result property="yaxis" 	column="YAXIS" 	columnIndex="4"/>		
+		<result property="lgdNm"    columnIndex="5"  column="LGD_NM"/>
+		<result property="creatDt" 	column="CREAT_DT" 	columnIndex="6"/>
+		<result property="updtDt" 		column="UPDT_DT" 		columnIndex="7"/>	
+</resultMap>
+	
+	<select id="ChartGraphDAO.selectChartGraph" resultMap="ChartGraph">
+<![CDATA[		
+			SELECT
+					SN, MBER_ID, XAXIS, YAXIS, LGD_NM, CREAT_DT, UPDT_DT	 			  			 			  
+			FROM	COMTNCHARTGRAPH
+			WHERE	SN=#sn#					
+		]]>
+</select>
+	
+	<select id="ChartGraphDAO.selectChartGraphList" parameterClass="ChartGraphVO" resultClass="egovMap">
+<![CDATA[
+			SELECT
+				SN, MBER_ID, XAXIS, YAXIS, LGD_NM, CREAT_DT, UPDT_DT		 
+			FROM	COMTNCHARTGRAPH
+			WHERE	1=1
+		]]>
+			<isEqual prepend="AND" property="searchCondition" compareValue="mberId">
+				<![CDATA[MBER_ID LIKE CONCAT('%', #searchKeyword#, '%')]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="xaxis">
+				<![CDATA[XAXIS LIKE CONCAT('%', #searchKeyword#, '%')]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="yaxis">
+				<![CDATA[YAXIS  LIKE CONCAT('%', #searchKeyword#, '%')]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="lgdNm">
+				<![CDATA[LGD_NM LIKE CONCAT('%', #searchKeyword#, '%')]]>
+			</isEqual>
+			ORDER BY SN DESC			
+			LIMIT  #recordCountPerPage# OFFSET #firstIndex#
+</select>
+	
+	<select id="ChartGraphDAO.selectChartGraphListTotCnt" parameterClass="ChartGraphVO" resultClass="int">
+<![CDATA[
+			SELECT 	COUNT(*) totcnt
+			FROM 	COMTNCHARTGRAPH
+			WHERE	1=1
+		]]>		
+			<isEqual prepend="AND" property="searchCondition" compareValue="mberId">
+				<![CDATA[MBER_ID LIKE CONCAT('%', #searchKeyword#, '%')]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="xaxis">
+				<![CDATA[XAXIS LIKE CONCAT('%', #searchKeyword#, '%')]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="yaxis">
+				<![CDATA[YAXIS  LIKE CONCAT('%', #searchKeyword#, '%')]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="lgdNm">
+				<![CDATA[LGD_NM LIKE CONCAT('%', #searchKeyword#, '%')]]>
+			</isEqual>
+</select>
+	
+	<insert id="ChartGraphDAO.insertChartGraph">
+<![CDATA[	
+			INSERT INTO COMTNCHARTGRAPH
+					(SN, MBER_ID, XAXIS, YAXIS, LGD_NM, CREAT_DT, UPDT_DT) 
+			VALUES
+					( #sn#, #mberId#, #xaxis#, #yaxis#, #lgdNm#, NOW(), NOW() )
+		]]>
+</insert>
+
+	<update id="ChartGraphDAO.updateChartGraph">
+<![CDATA[
+			UPDATE	COMTNCHARTGRAPH SET
+					SN=#sn# 
+				  , XAXIS=#xaxis#
+				  , YAXIS=#yaxis#
+				  , LGD_NM=#lgdNm#
+				  , UPDT_DT=NOW()
+ 			WHERE  SN=#sn#
+		]]>
+	<isNotEqual property="mberId" compareValue="">
+		  AND MBER_ID = #mberId#
+	</isNotEqual>
+</update>
+	
+	<delete id="ChartGraphDAO.deleteChartGraph">
+<![CDATA[
+			DELETE FROM COMTNCHARTGRAPH 
+			WHERE  SN=#sn#
+		]]>
+	<isNotEqual property="mberId" compareValue="">
+		  AND MBER_ID = #mberId#
+	</isNotEqual>
+</delete>
+	
+</sqlMap>

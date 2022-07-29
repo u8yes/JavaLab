@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Sync">
+	<typeAlias  alias="egovMap" type="org.egovframe.rte.psl.dataaccess.util.EgovMap"/>
+	<typeAlias  alias="SyncVO" type="egovframework.mbl.com.syn.service.SyncVO"/>	
+
+	<resultMap id="Sync" class="egovframework.mbl.com.syn.service.Sync">
+		<result property="sn" column="SN" columnIndex="1"/>
+		<result property="mberId" column="MBER_ID" columnIndex="2"/>
+		<result property="syncSj" column="SYNC_SJ" columnIndex="3"/>
+		<result property="syncCn" column="SYNC_CN" columnIndex="4"/>		
+		<result property="syncDt" column="SYNC_DT" columnIndex="5"/>
+		<result property="creatDt" column="CREAT_DT" columnIndex="6"/>
+		<result property="updtDt" column="UPDT_DT" columnIndex="7"/>
+	</resultMap>
+	
+	<!-- 동기화 서비스 글 목록 Total count -->
+	<select id="SyncDAO.selectSyncTotCnt" resultClass="java.lang.Integer">
+	<![CDATA[
+		SELECT COUNT(A.SN) AS TOT_CNT
+		  FROM COMTNSYNC A
+		 WHERE 1 = 1		   
+	]]>
+		<isEqual  prepend="AND" property="searchCondition" compareValue="mberId">
+		<![CDATA[
+			A.MBER_ID LIKE CONCAT('%', #searchKeyword#, '%') 	
+		]]>
+		</isEqual>
+		<isEqual  prepend="AND" property="searchCondition" compareValue="syncSj">
+		<![CDATA[
+			A.SYNC_SJ LIKE CONCAT('%', #searchKeyword#, '%') 	
+		]]>
+		</isEqual>
+		<isEqual  prepend="AND" property="searchCondition" compareValue="syncAll">
+		<![CDATA[
+			(A.MBER_ID LIKE CONCAT('%', #searchKeyword#, '%')) OR (A.SYNC_SJ LIKE CONCAT('%', #searchKeyword#, '%')) OR (A.SYNC_CN LIKE CONCAT('%', #searchKeyword#, '%'))	
+		]]>
+		</isEqual>
+	</select>
+	
+	<!-- 동기화 서비스 목록 조회 -->
+	<select id="SyncDAO.selectSyncList" resultMap="Sync">
+	<![CDATA[		
+	SELECT A.*
+	  FROM (	
+		SELECT A.SN,
+		       A.MBER_ID,
+		       A.SYNC_SJ,
+		       A.SYNC_CN,
+		       DATE_FORMAT( A.SYNC_DT, '%Y-' '%m-' '%d') AS SYNC_DT,
+		       DATE_FORMAT( A.CREAT_DT, '%Y-' '%m-' '%d') AS CREAT_DT,
+		       DATE_FORMAT( A.UPDT_DT, '%Y-' '%m-' '%d') AS UPDT_DT
+		FROM COMTNSYNC A
+		WHERE 1 = 1
+	]]>
+	
+		<isEqual  prepend="AND" property="searchCondition" compareValue="mberId">
+		<![CDATA[
+			A.MBER_ID LIKE CONCAT('%', #searchKeyword#, '%') 	
+		]]>
+		</isEqual>
+		<isEqual  prepend="AND" property="searchCondition" compareValue="syncSj">
+		<![CDATA[
+			A.SYNC_SJ LIKE CONCAT('%', #searchKeyword#, '%') 	
+		]]>
+		</isEqual>
+		<isEqual  prepend="AND" property="searchCondition" compareValue="syncAll">
+		<![CDATA[
+			(A.MBER_ID LIKE CONCAT('%', #searchKeyword#, '%')) OR (A.SYNC_SJ LIKE CONCAT('%', #searchKeyword#, '%')) OR (A.SYNC_CN LIKE CONCAT('%', #searchKeyword#, '%'))	
+		]]>
+		</isEqual>
+		ORDER BY A.SN DESC
+		) A
+		<isNotEqual property="deviceType" compareValue="M">
+		<![CDATA[
+			LIMIT  #recordCountPerPage# OFFSET #firstIndex#
+		]]>
+		</isNotEqual>
+		<isEqual property="deviceType" compareValue="M">
+		<![CDATA[
+			LIMIT 0 , #fetchRow#
+		]]>
+		</isEqual>
+	</select>
+	
+	<!-- 동기화 서비스 글 상세 조회 -->
+	<select id="SyncDAO.selectSync" resultMap="Sync">
+	<![CDATA[		
+		SELECT A.SN,
+		       A.MBER_ID,
+		       A.SYNC_SJ,
+		       A.SYNC_CN,
+		       CASE WHEN A.SYNC_DT IS NULL THEN ''
+		            ELSE DATE_FORMAT( A.SYNC_DT, '%Y-' '%m-' '%d') 
+		        END AS SYNC_DT,
+		       DATE_FORMAT( A.CREAT_DT, '%Y-' '%m-' '%d') AS CREAT_DT,
+		       DATE_FORMAT( A.UPDT_DT, '%Y-' '%m-' '%d') AS UPDT_DT
+		  FROM COMTNSYNC A
+		 WHERE 1 = 1
+		   AND A.SN = #sn#
+	]]>
+	</select>
+	
+	
+	<!-- 동기화 서비스 신규 일련번호 -->
+	<select id="SyncDAO.selectSyncNewSn" resultClass="java.lang.Integer">
+	<![CDATA[
+		SELECT CASE WHEN A.CNT = 0 THEN 1
+                    ELSE (SELECT MAX(A.SN) + 1 
+                            FROM COMTNSYNC A
+                         )
+                END AS SN 
+  		  FROM (
+		        SELECT COUNT(SN) AS CNT
+		          FROM COMTNSYNC
+               ) A
+	]]>
+	</select>	
+
+	<!-- 동기화 서비스 글 등록 -->
+	<insert id="SyncDAO.insertSync">
+	<![CDATA[	
+		INSERT INTO COMTNSYNC (
+				SN,
+				MBER_ID,
+				SYNC_SJ,
+				SYNC_CN,
+				CREAT_DT,
+				UPDT_DT
+		) VALUES (
+				#sn#,
+				#mberId#,
+				#syncSj#,
+				#syncCn#,
+				now(),
+				now()
+		)
+	]]>
+	</insert>
+	
+	<!-- 동기화서비스 글 삭제 -->
+	<delete id="SyncDAO.deleteSync">
+	<![CDATA[
+		DELETE FROM COMTNSYNC
+		 WHERE SN = #sn#
+		]]>
+	<isNotEqual property="mberId" compareValue="">
+		  AND MBER_ID = #mberId#
+	</isNotEqual>
+	</delete>		
+	
+	<!-- 동기화서비스 글 수정 -->
+	<update id="SyncDAO.updateSync">
+	<![CDATA[
+		UPDATE COMTNSYNC
+		   SET MBER_ID = #mberId#,
+			   SYNC_SJ = #syncSj#,
+			   SYNC_CN = #syncCn#,
+			   UPDT_DT = now()
+		 WHERE SN=#sn#
+		]]>
+	<isNotEqual property="mberId" compareValue="">
+		  AND MBER_ID = #mberId#
+	</isNotEqual>
+	</update>		
+
+</sqlMap>

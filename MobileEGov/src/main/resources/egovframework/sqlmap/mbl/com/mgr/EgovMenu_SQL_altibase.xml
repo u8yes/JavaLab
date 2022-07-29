@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Menu">
+
+	<typeAlias  alias="egovMap" type="org.egovframe.rte.psl.dataaccess.util.EgovMap"/>
+	<typeAlias  alias="MenuVO" type="egovframework.mbl.com.mgr.service.MenuVO"/>
+
+	<resultMap id="Menu.menu" class="egovframework.mbl.com.mgr.service.MenuVO">
+		<result property="menuCode" column="MENU_CODE"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuLvl" column="MENU_LVL"/>
+		<result property="cnncUrl" column="CNNC_URL"/>
+		<result property="menuDc" column="MENU_DC"/>
+		<result property="actvtyAt" column="ACTVTY_AT"/>
+		<result property="upperMenuId" column="UPPER_MENU_ID"/>
+		<result property="upperMenuNm" column="UPPER_MENU_NM"/>
+		<result property="frstRegistPnttm" column="FRST_REGIST_PNTTM"/>
+		<result property="frstRegisterId" column="FRST_REGISTER_ID"/>
+		<result property="lastUpdtPnttm" column="LAST_UPDT_PNTTM"/>
+		<result property="lastUpdusrId" column="LAST_UPDUSR_ID"/>
+	</resultMap>
+
+	<insert id="MenuDAO.insertMenu_S">
+		<![CDATA[
+	    INSERT INTO COMTNMOBILEMENUINFO
+				  ( MENU_CODE
+				  ,	MENU_NM
+				  , MENU_LVL
+				  , CNNC_URL
+				  , MENU_DC
+				  , ACTVTY_AT
+				  , UPPER_MENU_ID
+				  , FRST_REGIST_PNTTM
+				  , FRST_REGISTER_ID )
+			VALUES (
+			        #menuCode#
+				  ,	#menuNm#
+				  , #menuLvl#
+				  , #cnncUrl#
+				  , #menuDc#
+				  , #actvtyAt#
+				  , #upperMenuId#
+				  , sysdate
+				  , #frstRegisterId# )
+		]]>
+	</insert>
+	
+	<update id="MenuDAO.updateMenu_S">
+		<![CDATA[
+		 UPDATE COMTNMOBILEMENUINFO 
+			SET MENU_NM = #menuNm#
+			  , CNNC_URL = #cnncUrl#
+			  , MENU_DC = #menuDc#
+			  , ACTVTY_AT = #actvtyAt#
+			  , UPPER_MENU_ID = #upperMenuId#
+			  , LAST_UPDT_PNTTM = sysdate
+			  , LAST_UPDUSR_ID = #lastUpdusrId#
+		  WHERE MENU_CODE = #menuCode#
+		]]>
+	</update>
+	
+	<delete id="MenuDAO.deleteMenu_S">
+		<![CDATA[
+	  DELETE FROM COMTNMOBILEMENUINFO
+			WHERE MENU_CODE = #menuCode#
+		]]>
+	</delete>
+	
+	<select id="MenuDAO.selectMenu_S" resultMap="menu">
+		<![CDATA[
+			 
+			 SELECT A.MENU_CODE 
+				  , A.MENU_NM 
+				  , A.MENU_LVL 
+				  , A.CNNC_URL 
+				  , A.MENU_DC 
+				  , A.ACTVTY_AT 
+				  , A.UPPER_MENU_ID 
+				  , (SELECT MENU_NM 
+				       FROM COMTNMOBILEMENUINFO 
+				      WHERE MENU_CODE = A.UPPER_MENU_ID ) AS UPPER_MENU_NM 
+				  , A.FRST_REGIST_PNTTM 
+				  , A.FRST_REGISTER_ID 
+				  , A.LAST_UPDT_PNTTM 
+				  , A.LAST_UPDUSR_ID 
+			   FROM COMTNMOBILEMENUINFO A 
+			  WHERE A.MENU_CODE = #menuCode#
+		]]>
+	</select>
+	
+	<select id="MenuDAO.selectUpperMenuList_S" parameterClass="MenuVO" resultClass="egovMap">
+			SELECT MENU_CODE
+			     , MENU_NM
+			     , MENU_LVL
+			     , CNNC_URL
+			     , MENU_DC
+			     , ACTVTY_AT
+			     , UPPER_MENU_ID 
+			  FROM COMTNMOBILEMENUINFO
+	</select>
+	
+	<select id="MenuDAO.selectMenuList_S" parameterClass="MenuVO" resultClass="egovMap">
+		    SELECT A.MENU_CODE
+			     , A.MENU_NM
+			     , A.MENU_LVL
+			     , A.CNNC_URL
+			     , A.MENU_DC
+			     , A.ACTVTY_AT
+			     , A.UPPER_MENU_ID 
+			     , B.NAME AS UPPER_MENU_NM 
+			  FROM COMTNMOBILEMENUINFO A
+			  LEFT OUTER JOIN 
+				  (SELECT MENU_CODE AS CODE
+				        , MENU_NM   AS NAME
+				     FROM COMTNMOBILEMENUINFO
+				    WHERE MENU_LVL = 1) B
+			    ON A.UPPER_MENU_ID = B.CODE
+		     WHERE A.MENU_LVL = 2
+			ORDER BY A.MENU_CODE DESC
+	</select>
+	<select id="MenuDAO.selectMenuUseList_S" parameterClass="MenuVO" resultClass="egovMap">
+			SELECT A.MENU_CODE
+			     , A.MENU_NM
+			     , A.MENU_LVL
+			     , A.CNNC_URL
+			     , A.MENU_DC
+			     , A.ACTVTY_AT
+			     , A.UPPER_MENU_ID 
+			 FROM 
+			(
+				SELECT CONCAT(MENU_CODE,'0') AS ORDERNUM
+				     , MENU_CODE
+				     , MENU_NM
+				     , MENU_LVL
+				     , CNNC_URL
+				     , MENU_DC
+				     , ACTVTY_AT
+				     , UPPER_MENU_ID 
+				 FROM  COMTNMOBILEMENUINFO 
+				WHERE  MENU_LVL = 1
+				UNION ALL
+				SELECT CONCAT(UPPER_MENU_ID,MENU_NM) AS ORDERNUM
+				     , MENU_CODE
+				     , MENU_NM
+				     , MENU_LVL
+				     , CNNC_URL
+				     , MENU_DC
+				     , ACTVTY_AT
+				     , UPPER_MENU_ID 
+				 FROM  COMTNMOBILEMENUINFO 
+				WHERE  MENU_LVL = 2
+				  AND  ACTVTY_AT = 1
+			) A 
+		 ORDER BY A.ORDERNUM ASC
+	</select>
+
+</sqlMap>

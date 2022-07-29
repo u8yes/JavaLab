@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="GeoLocation">
+
+	<typeAlias  alias="GeoLocation" type="egovframework.mbl.com.geo.service.GeoLocation"/>
+	<typeAlias  alias="GeoLocationVO" type="egovframework.mbl.com.geo.service.GeoLocationVO"/>
+
+	<resultMap id="geoLocationList" class="egovframework.mbl.com.geo.service.GeoLocationVO">
+		<result property="sn" column="SN" columnIndex="1"/>
+		<result property="buldNm" column="BULD_NM" columnIndex="2"/>
+		<result property="la" column="LA" columnIndex="3"/>
+		<result property="lo" column="LO" columnIndex="4"/>
+		<result property="telno" column="TELNO" columnIndex="5"/>
+		<result property="adres" column="ADRES" columnIndex="6"/>
+	</resultMap>
+
+	<resultMap id="geoLocationDetail" class="egovframework.mbl.com.geo.service.GeoLocationVO">
+		<result property="sn" column="SN" columnIndex="1"/>
+		<result property="mberId" column="MBER_ID" columnIndex="2"/>
+		<result property="buldNm" column="BULD_NM" columnIndex="3"/>
+		<result property="la" column="LA" columnIndex="4"/>
+		<result property="lo" column="LO" columnIndex="5"/>
+		<result property="telno" column="TELNO" columnIndex="6"/>
+		<result property="adres" column="ADRES" columnIndex="7"/>
+	</resultMap>
+		
+	<select id="GeoLocationDAO.selectBuildingLocationInfoList" parameterClass="GeoLocationVO" resultMap="geoLocationList" >
+		<![CDATA[
+			SELECT  * 
+              FROM  (
+            SELECT ROWNUM RNUM, ALL_LIST.* 
+              FROM  (
+		
+			SELECT
+				SN, BULD_NM, LA, LO, TELNO, ADRES
+			FROM
+				COMTNGEOLOCATION
+			WHERE
+				1 = 1
+		]]>
+			<isEqual prepend="AND" property="searchCondition" compareValue="0">
+				<![CDATA[	BULD_NM LIKE '%' || #searchKeyword# || '%' 		]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="1">
+				<![CDATA[	TELNO LIKE '%' || #searchKeyword# || '%' 		]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="2">
+				<![CDATA[	ADRES LIKE '%' || #searchKeyword# || '%' 		]]>
+			</isEqual>
+		<![CDATA[
+			ORDER BY sn DESC
+					) ALL_LIST
+                   	)
+        ]]>
+        <isEqual property="searchUseYn" compareValue="">
+        <![CDATA[
+            WHERE  RNUM  > #firstIndex#
+              AND  RNUM <= #firstIndex# + #recordCountPerPage#
+        ]]>
+		</isEqual>
+			
+	</select>	
+	
+	<select id="GeoLocationDAO.selectBuildingLocationInfoListCnt" parameterClass="GeoLocationVO" resultClass="java.lang.Integer" >
+		<![CDATA[
+			SELECT
+				COUNT(SN)
+			FROM
+				COMTNGEOLOCATION
+			WHERE
+				1 = 1
+		]]>
+			<isEqual prepend="AND" property="searchCondition" compareValue="0">
+				<![CDATA[	BULD_NM LIKE '%' || #searchKeyword# || '%' 		]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="1">
+				<![CDATA[	TELNO LIKE '%' || #searchKeyword# || '%' 		]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="2">
+				<![CDATA[	ADRES LIKE '%' || #searchKeyword# || '%' 		]]>
+			</isEqual>
+	</select>	
+ 
+ 	<select id="GeoLocationDAO.selectBuildingLocationInfo" parameterClass="GeoLocationVO" resultMap="geoLocationDetail" >
+		<![CDATA[
+			SELECT
+				SN, MBER_ID, BULD_NM, LA, LO, TELNO, ADRES
+			FROM
+				COMTNGEOLOCATION
+			WHERE
+				SN = #sn#
+		]]>	
+	</select>
+ 
+ 	<insert id="GeoLocationDAO.insertBuildingLocationInfo" parameterClass="GeoLocation" >
+		<![CDATA[
+			INSERT INTO COMTNGEOLOCATION
+				(SN, MBER_ID, BULD_NM, LA, LO, TELNO, ADRES)
+			VALUES
+				(#sn#, #mberId#, #buldNm#, #la#, #lo#, #telno#, #adres#)			
+		]]>
+	</insert>
+	
+	<update id="GeoLocationDAO.updateBuildingLocationInfo">
+		<![CDATA[
+			UPDATE
+				COMTNGEOLOCATION
+			SET
+				BULD_NM = #buldNm#,
+				LA = #la#,	
+				LO = #lo#,
+				TELNO = #telno#,
+				ADRES = #adres#
+ 			WHERE
+ 				SN = #sn#
+		]]>
+		<isNotEqual property="mberId" compareValue="">
+				AND MBER_ID = #mberId#
+		</isNotEqual>
+	</update>
+	
+	<delete id="GeoLocationDAO.deleteBuildingLocationInfo">
+		<![CDATA[
+			DELETE FROM
+				COMTNGEOLOCATION 
+			WHERE
+				SN = #sn#
+		]]>
+		<isNotEqual property="mberId" compareValue="">
+			  	AND MBER_ID = #mberId#
+		</isNotEqual>
+	</delete>
+</sqlMap>

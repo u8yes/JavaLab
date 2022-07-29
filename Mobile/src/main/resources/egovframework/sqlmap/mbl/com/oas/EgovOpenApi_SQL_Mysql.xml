@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="OpenApi">
+
+	<typeAlias  alias="OpenApi" type="egovframework.mbl.com.oas.service.OpenApi"/>
+	<typeAlias  alias="OpenApiVO" type="egovframework.mbl.com.oas.service.OpenApiVO"/>
+
+	<resultMap id="openApiList" class="egovframework.mbl.com.oas.service.OpenApiVO">
+		<result property="sn" column="SN" columnIndex="1"/>
+		<result property="openApiSvcNm" column="OPEN_API_SVC_NM" columnIndex="2"/>
+		<result property="openApiProvdInsttNm" column="OPEN_API_PROVD_INSTT_NM" columnIndex="3"/>
+		<result property="collectDt" column="COLLECT_DT" columnIndex="4"/>
+	</resultMap>
+
+	<resultMap id="openApiDetail" class="egovframework.mbl.com.oas.service.OpenApiVO">
+		<result property="sn" column="SN" columnIndex="1"/>
+		<result property="mberId" column="MBER_ID" columnIndex="2"/>
+		<result property="openApiSvcNm" column="OPEN_API_SVC_NM" columnIndex="3"/>
+		<result property="openApiProvdInsttNm" column="OPEN_API_PROVD_INSTT_NM" columnIndex="4"/>
+		<result property="openApiSvcCn" column="OPEN_API_SVC_CN" columnIndex="5"/>
+		<result property="collectDt" column="COLLECT_DT" columnIndex="6"/>
+	</resultMap>
+		
+	<select id="OpenApiDAO.selectOpenApiInquiryHistoryList" parameterClass="OpenApiVO" resultMap="openApiList" >
+		<![CDATA[
+			SELECT
+				a.SN, b.CODE_NM as OPEN_API_SVC_NM, c.CODE_NM as OPEN_API_PROVD_INSTT_NM, a.COLLECT_DT
+			FROM
+				COMTNOPENAPI a, COMTCCMMNDETAILCODE b, COMTCCMMNDETAILCODE c
+			WHERE
+				a.OPEN_API_SVC_CODE_ID = b.CODE_ID
+			AND a.OPEN_API_SVC_CODE = b.CODE
+			AND a.OPENAPI_PROVD_INSTT_CODE_ID = c.CODE_ID
+			AND a.OPENAPI_PROVD_INSTT_CODE = c.CODE
+		]]>
+			<isEqual prepend="AND" property="searchCondition" compareValue="0">
+				<![CDATA[	c.CODE_NM LIKE CONCAT ('%', #searchKeyword#,'%')	]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="1">
+				<![CDATA[	b.CODE_NM LIKE CONCAT ('%', #searchKeyword#,'%')	]]>
+			</isEqual>
+		<![CDATA[
+			ORDER BY a.SN DESC
+			LIMIT #recordCountPerPage# OFFSET #firstIndex#
+		]]>
+	</select>	
+	
+	<select id="OpenApiDAO.selectOpenApiInquiryHistoryListCnt" parameterClass="OpenApiVO" resultClass="java.lang.Integer" >
+		<![CDATA[
+			SELECT
+				COUNT(a.SN)
+			FROM
+				COMTNOPENAPI a, COMTCCMMNDETAILCODE b, COMTCCMMNDETAILCODE c
+			WHERE
+				a.OPEN_API_SVC_CODE_ID = b.CODE_ID
+			AND a.OPEN_API_SVC_CODE = b.CODE
+			AND a.OPENAPI_PROVD_INSTT_CODE_ID = c.CODE_ID
+			AND a.OPENAPI_PROVD_INSTT_CODE = c.CODE
+		]]>
+			<isEqual prepend="AND" property="searchCondition" compareValue="0">
+				<![CDATA[	c.CODE_NM LIKE CONCAT ('%', #searchKeyword#,'%') 	]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="1">
+				<![CDATA[	b.CODE_NM LIKE CONCAT ('%', #searchKeyword#,'%') 	]]>
+			</isEqual>
+	</select>	
+ 
+ 	<select id="OpenApiDAO.selectOpenApiInquiryHistory" parameterClass="OpenApiVO" resultMap="openApiDetail" >
+		<![CDATA[
+			SELECT
+				a.SN, a.MBER_ID, b.CODE_NM as OPEN_API_SVC_NM,
+				c.CODE_NM as OPEN_API_PROVD_INSTT_NM, a.OPEN_API_SVC_CN, a.COLLECT_DT
+			FROM
+				COMTNOPENAPI a, COMTCCMMNDETAILCODE b, COMTCCMMNDETAILCODE c
+			WHERE
+				a.OPEN_API_SVC_CODE_ID = b.CODE_ID
+			AND a.OPEN_API_SVC_CODE = b.CODE
+			AND a.OPENAPI_PROVD_INSTT_CODE_ID = c.CODE_ID
+			AND a.OPENAPI_PROVD_INSTT_CODE = c.CODE
+			AND a.SN = #sn#
+		]]>				
+	</select>
+ 
+ 	<insert id="OpenApiDAO.insertOpenApiInquiryHistory" parameterClass="OpenApi" >
+		<![CDATA[
+			INSERT INTO COMTNOPENAPI
+				(SN, MBER_ID, OPEN_API_SVC_CODE_ID,
+				OPEN_API_SVC_CODE, OPEN_API_SVC_CN, OPENAPI_PROVD_INSTT_CODE_ID,
+				OPENAPI_PROVD_INSTT_CODE, COLLECT_DT)
+			VALUES
+				(#sn#,
+				#mberId#,
+				(SELECT CODE_ID
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #openApiSvcNm#),
+				(SELECT CODE
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #openApiSvcNm#),
+				#openApiSvcCn#,
+				(SELECT CODE_ID
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #openApiProvdInsttNm#),
+				(SELECT CODE
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #openApiProvdInsttNm#),
+				SYSDATE())
+		]]>
+	</insert>
+</sqlMap>

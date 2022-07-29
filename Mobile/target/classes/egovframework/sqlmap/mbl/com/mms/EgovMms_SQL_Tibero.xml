@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Mms">
+
+	<typeAlias  alias="MmsTransInfo" type="egovframework.mbl.com.mms.service.MmsTransInfo"/>
+	<typeAlias  alias="MmsTransInfoVO" type="egovframework.mbl.com.mms.service.MmsTransInfoVO"/>
+	<typeAlias  alias="AttachFile" type="egovframework.mbl.com.mms.service.AttachFile"/>
+	<typeAlias  alias="AttachFileVO" type="egovframework.mbl.com.mms.service.AttachFileVO"/>
+
+	<resultMap id="mmsTransInfoList" class="egovframework.mbl.com.mms.service.MmsTransInfoVO">
+		<result property="sn" column="SN" columnIndex="1"/>
+		<result property="trnsmisNo" column="TRNSMIS_NO" columnIndex="2"/>
+		<result property="recptnNo" column="RECPTN_NO" columnIndex="3"/>
+		<result property="trnsmisResultNm" column="TRNSMIS_RESULT_NM" columnIndex="4"/>
+		<result property="rqesterResultNm" column="RQESTER_RESULT_NM" columnIndex="5"/>
+		<result property="trnsmisDt" column="TRNSMIS_DT" columnIndex="6"/>
+		<result property="trnsmisConfirmDt" column="TRNSMIS_CONFIRM_DT" columnIndex="7"/>
+		<result property="mssageId" column="MSSAGE_ID" columnIndex="8"/>
+	</resultMap>
+
+	<resultMap id="attachFileList" class="egovframework.mbl.com.mms.service.AttachFileVO">
+		<result property="sn" column="SN" columnIndex="1"/>
+		<result property="atchFileId" column="ATCH_FILE_ID" columnIndex="2"/>
+		<result property="atchFileNm" column="ORIGNL_FILE_NM" columnIndex="3"/>
+		<result property="mmsAtchFileSj" column="MMS_ATCH_FILE_SJ" columnIndex="4"/>
+		<result property="updtDt" column="UPDT_DT" columnIndex="5"/>
+	</resultMap>
+
+	<resultMap id="attachFileDetail" class="egovframework.mbl.com.mms.service.AttachFileVO">
+		<result property="sn" column="SN" columnIndex="1"/>
+		<result property="mberId" column="MBER_ID" columnIndex="2"/>
+		<result property="atchFileId" column="ATCH_FILE_ID" columnIndex="3"/>
+		<result property="atchFileNm" column="ORIGNL_FILE_NM" columnIndex="4"/>
+		<result property="atchFileType" column="FILE_EXTSN" columnIndex="5"/>
+		<result property="atchFilePath" column="FILE_STRE_COURS" columnIndex="6"/>
+		<result property="streFileNm" column="STRE_FILE_NM" columnIndex="7"/>
+		<result property="mmsAtchFileSj" column="MMS_ATCH_FILE_SJ" columnIndex="8"/>
+		<result property="creatDt" column="CREAT_DT" columnIndex="9"/>
+		<result property="updtDt" column="UPDT_DT" columnIndex="10"/>
+	</resultMap>
+		
+	<insert id="MmsDAO.insertMmsTransmissionResult" parameterClass="MmsTransInfo" >
+		<![CDATA[
+			INSERT INTO COMTNMMS
+				(SN, MBER_ID, TRNSMIS_NO, 
+				RECPTN_NO, MSSAGE_SJ, MSSAGE_CN,
+				TRNSMIS_DT, RQESTER_RESULT_CODE_ID, RQESTER_RESULT_CODE, MSSAGE_ID)
+			VALUES
+				(#sn#, #mberId#, #trnsmisNo#,
+				#recptnNo#, #mssageSj#, #mssageCn#,
+				SYSDATE,
+				(SELECT CODE_ID
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #rqesterResultNm#),
+				(SELECT CODE
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #rqesterResultNm#),
+				#mssageId#)
+		]]>
+	</insert>
+	
+	<update id="MmsDAO.updateMmsTransmissionResult">
+		<![CDATA[
+			UPDATE
+				COMTNMMS
+			SET
+				TRNSMIS_RESULT_CODE_ID = (SELECT CODE_ID
+											FROM COMTCCMMNDETAILCODE
+											WHERE CODE_NM = #trnsmisResultNm#),
+				TRNSMIS_RESULT_CODE = (SELECT CODE
+											FROM COMTCCMMNDETAILCODE
+											WHERE CODE_NM = #trnsmisResultNm#),
+				TRNSMIS_CONFIRM_DT = SYSDATE
+ 			WHERE
+ 				MSSAGE_ID = #mssageId#
+		]]>
+	</update>	
+	
+	<select id="MmsDAO.selectMmsTransmissionResultList" parameterClass="MmsTransInfoVO" resultMap="mmsTransInfoList" >
+		<![CDATA[
+			SELECT  * 
+              FROM  (
+            SELECT ROWNUM RNUM, ALL_LIST.* 
+              FROM  (
+		
+			SELECT
+				a.SN, a.TRNSMIS_NO, a.RECPTN_NO,
+				b.CODE_NM AS TRNSMIS_RESULT_NM, c.CODE_NM AS RQESTER_RESULT_NM,
+				a.TRNSMIS_DT, a.TRNSMIS_CONFIRM_DT, a.MSSAGE_ID
+			FROM
+				COMTNMMS a
+			LEFT OUTER JOIN
+				COMTCCMMNDETAILCODE b
+				ON (a.TRNSMIS_RESULT_CODE_ID = b.CODE_ID
+				AND a.TRNSMIS_RESULT_CODE = b.CODE)
+			LEFT OUTER JOIN
+				COMTCCMMNDETAILCODE c
+				ON (a.RQESTER_RESULT_CODE_ID = c.CODE_ID
+				AND a.RQESTER_RESULT_CODE = c.CODE)
+			WHERE
+				1 = 1
+		]]>
+			<isNotEmpty property="searchKeyword" >
+				<isEqual prepend="AND" property="searchCondition" compareValue="0">
+					<![CDATA[	a.TRNSMIS_NO LIKE '%' || #searchKeyword# || '%'	]]>
+				</isEqual>
+				<isEqual prepend="AND" property="searchCondition" compareValue="1">
+					<![CDATA[	a.RECPTN_NO LIKE '%' || #searchKeyword# || '%'	]]>
+				</isEqual>
+				<isEqual prepend="AND" property="searchCondition" compareValue="2">
+					<![CDATA[	b.CODE_NM LIKE '%' || #searchKeyword# || '%'	]]>
+				</isEqual>
+				<isEqual prepend="AND" property="searchCondition" compareValue="3">
+					<![CDATA[	c.CODE_NM LIKE '%' || #searchKeyword# || '%'	]]>
+				</isEqual>
+			</isNotEmpty>
+		<![CDATA[
+			ORDER BY a.SN DESC
+					) ALL_LIST
+                   	)
+            WHERE  RNUM  > #firstIndex#
+              AND  RNUM <= #firstIndex# + #recordCountPerPage#
+		]]>
+	</select>	
+	
+	<select id="MmsDAO.selectMmsTransmissionResultListCnt" parameterClass="MmsTransInfoVO" resultClass="java.lang.Integer" >
+		<![CDATA[
+			SELECT
+				COUNT(a.SN)
+			FROM
+				COMTNMMS a
+			LEFT OUTER JOIN
+				COMTCCMMNDETAILCODE b
+				ON (a.TRNSMIS_RESULT_CODE_ID = b.CODE_ID
+				AND a.TRNSMIS_RESULT_CODE = b.CODE)
+			LEFT OUTER JOIN
+				COMTCCMMNDETAILCODE c
+				ON (a.RQESTER_RESULT_CODE_ID = c.CODE_ID
+				AND a.RQESTER_RESULT_CODE = c.CODE)
+			WHERE
+				1 = 1
+		]]>
+			<isNotEmpty property="searchKeyword" >
+				<isEqual prepend="AND" property="searchCondition" compareValue="0">
+					<![CDATA[	a.TRNSMIS_NO LIKE '%' || #searchKeyword# || '%'	]]>
+				</isEqual>
+				<isEqual prepend="AND" property="searchCondition" compareValue="1">
+					<![CDATA[	a.RECPTN_NO LIKE '%' || #searchKeyword# || '%'	]]>
+				</isEqual>
+				<isEqual prepend="AND" property="searchCondition" compareValue="2">
+					<![CDATA[	b.CODE_NM LIKE '%' || #searchKeyword# || '%'	]]>
+				</isEqual>
+				<isEqual prepend="AND" property="searchCondition" compareValue="3">
+					<![CDATA[	c.CODE_NM LIKE '%' || #searchKeyword# || '%'	]]>
+				</isEqual>
+			</isNotEmpty>
+	</select>
+	
+	<select id="MmsDAO.selectAttachFileList" parameterClass="AttachFileVO" resultMap="attachFileList" >
+		<![CDATA[
+			SELECT  * 
+              FROM  (
+            SELECT ROWNUM RNUM, ALL_LIST.* 
+              FROM  (
+		
+			SELECT
+				SN, ATCH_FILE_ID, ORIGNL_FILE_NM, MMS_ATCH_FILE_SJ, UPDT_DT
+			FROM
+				COMTNMMSATTACH 
+			NATURAL JOIN
+				COMTNFILEDETAIL
+			WHERE
+				1 = 1
+		]]>
+			<isEqual prepend="AND" property="searchCondition" compareValue="0">
+				<![CDATA[	MMS_ATCH_FILE_SJ LIKE '%' || #searchKeyword# || '%' 	]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="1">
+				<![CDATA[	ORIGNL_FILE_NM LIKE '%' || #searchKeyword# || '%' 	]]>
+			</isEqual>
+			
+		<![CDATA[
+			ORDER BY SN DESC
+					) ALL_LIST
+                   	)
+            WHERE  RNUM  > #firstIndex#
+              AND  RNUM <= #firstIndex# + #recordCountPerPage#
+		]]>
+	</select>	
+	
+	<select id="MmsDAO.selectAttachFileListCnt" parameterClass="AttachFileVO" resultClass="java.lang.Integer" >
+		<![CDATA[
+			SELECT
+				COUNT(SN)
+			FROM
+				COMTNMMSATTACH 
+			NATURAL JOIN
+				COMTNFILEDETAIL 
+			WHERE
+				1 = 1
+		]]>
+			<isEqual prepend="AND" property="searchCondition" compareValue="0">
+				<![CDATA[	MMS_ATCH_FILE_SJ LIKE '%' || #searchKeyword# || '%' 	]]>
+			</isEqual>
+			<isEqual prepend="AND" property="searchCondition" compareValue="1">
+				<![CDATA[	ORIGNL_FILE_NM LIKE '%' || #searchKeyword# || '%' 	]]>
+			</isEqual>
+	</select>
+	
+	<select id="MmsDAO.selectAttachFile" parameterClass="AttachFileVO" resultMap="attachFileDetail" >
+		<![CDATA[
+			SELECT
+				SN, MBER_ID, ATCH_FILE_ID,
+				ORIGNL_FILE_NM, FILE_STRE_COURS, FILE_EXTSN,
+				STRE_FILE_NM, MMS_ATCH_FILE_SJ, CREAT_DT, UPDT_DT
+			FROM
+				COMTNMMSATTACH 
+			NATURAL JOIN
+				COMTNFILEDETAIL 
+			WHERE
+				SN = #sn#
+		]]>	
+	</select>
+ 
+ 	<insert id="MmsDAO.insertAttachFile" parameterClass="AttachFile" >
+		<![CDATA[
+			INSERT INTO COMTNMMSATTACH
+				(SN, MBER_ID, ATCH_FILE_ID, MMS_ATCH_FILE_SJ, CREAT_DT, UPDT_DT)
+			VALUES
+				(#sn#, #mberId#, #atchFileId#, #mmsAtchFileSj#, SYSDATE, SYSDATE)			
+		]]>
+	</insert>
+	
+	<update id="MmsDAO.updateAttachFile">
+		<![CDATA[
+			UPDATE
+				COMTNMMSATTACH
+			SET
+				MBER_ID = #mberId#,
+				ATCH_FILE_ID = #atchFileId#,
+				MMS_ATCH_FILE_SJ = #mmsAtchFileSj#,
+				UPDT_DT = SYSDATE
+ 			WHERE
+ 				SN = #sn#
+		]]>
+		<isNotEqual property="mberId" compareValue="">
+			  	AND MBER_ID = #mberId#
+		</isNotEqual>
+	</update>
+	
+	<delete id="MmsDAO.deleteAttachFile">
+		<![CDATA[
+			DELETE FROM
+				COMTNMMSATTACH 
+			WHERE
+				SN = #sn#
+		]]>
+		<isNotEqual property="mberId" compareValue="">
+			  	AND MBER_ID = #mberId#
+		</isNotEqual>
+	</delete>
+ 
+</sqlMap>

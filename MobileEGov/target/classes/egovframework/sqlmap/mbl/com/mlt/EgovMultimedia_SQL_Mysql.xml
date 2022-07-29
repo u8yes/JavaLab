@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Multimedia">
+
+	<typeAlias  alias="egovMap" type="org.egovframe.rte.psl.dataaccess.util.EgovMap"/>
+    <typeAlias  alias="Multimedia" type="egovframework.mbl.com.mlt.service.Multimedia"/>
+    <typeAlias  alias="MultimediaVO" type="egovframework.mbl.com.mlt.service.MultimediaVO"/>
+
+    <resultMap id="Multimedia" class="egovframework.mbl.com.mlt.service.Multimedia">
+        <result property="sn" column="SN" columnIndex="1"/>
+        <result property="mberId" column="MBER_ID" columnIndex="2"/>
+        <result property="mltmdCode" column="MLTMD_CODE" columnIndex="3"/>
+        <result property="mltmdNm" column="MLTMD_NM" columnIndex="4"/>
+        <result property="mltmdSj" column="MLTMD_SJ" columnIndex="5"/>
+        <result property="atchFileId" 	column="ATCH_FILE_ID" 	columnIndex="6"/>
+        <result property="browserNm" column="BROWSER_NM" columnIndex="7"/>        
+        <result property="creatDt" column="CREAT_DT" columnIndex="8"/>
+        <result property="updtDt" column="UPDT_DT" columnIndex="9"/>
+    </resultMap>
+
+	<select id="MultimediaDAO.selectMultimedia" resultMap="Multimedia">
+		<![CDATA[		
+			SELECT	SN, MBER_ID,  
+					MLTMD_CODE, 
+					(	SELECT CODE_NM 
+						FROM COMTCCMMNDETAILCODE 
+						WHERE CODE_ID = 'COM077' 
+							AND USE_AT  = 'Y' 
+							AND CODE = MLTMD_CODE ) AS MLTMD_NM, 
+					MLTMD_SJ, ATCH_FILE_ID, BROWSER_NM, CREAT_DT, UPDT_DT 
+			FROM	COMTNMLTMD
+			WHERE	SN=#sn#
+		]]>
+</select>
+
+	<select id="MultimediaDAO.selectMultimediaList" parameterClass="MultimediaVO" resultClass="egovMap">
+		<![CDATA[
+			SELECT
+				A.SN, A.MBER_ID, A.MLTMD_CODE, B.CODE_NM AS MLTMD_NM, A.MLTMD_SJ, A.ATCH_FILE_ID, A.BROWSER_NM, A.CREAT_DT, A.UPDT_DT
+			FROM
+				COMTNMLTMD A, COMTCCMMNDETAILCODE B
+			WHERE
+				'COM077' = B.CODE_ID
+			AND A.MLTMD_CODE = B.CODE AND B.USE_AT  = 'Y'
+		]]>
+		<isEqual prepend="AND" property="searchCondition" compareValue="mberId">
+			<![CDATA[A.MBER_ID LIKE CONCAT('%', #searchKeyword#, '%')]]>
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="mltmdNm">
+			<![CDATA[B.CODE_NM LIKE CONCAT('%', #searchKeyword#, '%')]]>
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="mltmdSj">
+			<![CDATA[A.MLTMD_SJ LIKE CONCAT('%', #searchKeyword#, '%')]]>
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="browserNm">
+			<![CDATA[A.BROWSER_NM LIKE CONCAT('%', #searchKeyword#, '%')]]>
+		</isEqual>
+		<![CDATA[
+			ORDER BY SN DESC			
+			LIMIT  #recordCountPerPage# OFFSET #firstIndex#
+		]]>
+</select>
+	
+	<select id="MultimediaDAO.selectMultimediaListTotCnt" parameterClass="MultimediaVO" resultClass="int">
+		<![CDATA[
+			SELECT
+				COUNT(A.SN)
+			FROM
+				COMTNMLTMD A, COMTCCMMNDETAILCODE B
+			WHERE
+				'COM077' = B.CODE_ID
+			AND A.MLTMD_CODE = B.CODE AND B.USE_AT  = 'Y'
+		]]>
+		<isEqual prepend="AND" property="searchCondition" compareValue="mberId">
+			<![CDATA[A.MBER_ID LIKE CONCAT('%', #searchKeyword#, '%')]]>
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="mltmdNm">
+			<![CDATA[B.CODE_NM LIKE CONCAT('%', #searchKeyword#, '%')]]>
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="mltmdSj">
+			<![CDATA[A.MLTMD_SJ LIKE CONCAT('%', #searchKeyword#, '%')]]>
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="browserNm">
+			<![CDATA[A.BROWSER_NM LIKE CONCAT('%', #searchKeyword#, '%')]]>
+		</isEqual>
+	</select>
+	
+	<insert id="MultimediaDAO.insertMultimedia">
+<![CDATA[	
+			INSERT INTO COMTNMLTMD
+				(SN, MBER_ID, MLTMD_CODE, MLTMD_SJ, ATCH_FILE_ID, BROWSER_NM, CREAT_DT, UPDT_DT) 
+			VALUES
+				( #sn#, #mberId#, #mltmdCode#, #mltmdSj#, #atchFileId#, #browserNm#, NOW(), NOW() )
+		]]>
+</insert>
+
+	<update id="MultimediaDAO.updateMultimedia">
+		<![CDATA[
+			UPDATE	COMTNMLTMD SET
+					SN=#sn# 
+				  , MLTMD_CODE=#mltmdCode#
+				  , MLTMD_SJ=#mltmdSj#
+				  , ATCH_FILE_ID=#atchFileId#
+				  , BROWSER_NM=#browserNm#
+				  , UPDT_DT=NOW()
+ 			WHERE  SN=#sn#
+		]]>
+	<isNotEqual property="mberId" compareValue="">
+		  AND MBER_ID = #mberId#
+	</isNotEqual>
+	</update>
+	
+	<delete id="MultimediaDAO.deleteMultimedia">
+		<![CDATA[
+			DELETE FROM COMTNMLTMD 
+			WHERE  SN=#sn#
+		]]>
+	<isNotEqual property="mberId" compareValue="">
+		  AND MBER_ID = #mberId#
+	</isNotEqual>
+	</delete>
+
+</sqlMap>

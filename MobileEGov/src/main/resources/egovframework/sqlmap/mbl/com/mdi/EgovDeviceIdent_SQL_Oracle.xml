@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="DeviceIdent">
+
+	<typeAlias  alias="egovMap" type="org.egovframe.rte.psl.dataaccess.util.EgovMap"/>
+    <typeAlias  alias="DeviceIdent" type="egovframework.mbl.com.mdi.service.DeviceIdent"/>
+    <typeAlias  alias="DeviceIdentVO" type="egovframework.mbl.com.mdi.service.DeviceIdentVO"/>
+
+    <resultMap id="DeviceIdent" class="egovframework.mbl.com.mdi.service.DeviceIdent">
+        <result property="sn" column="SN" columnIndex="1"/>
+        <result property="mberId" column="MBER_ID" columnIndex="2"/>
+        <result property="uagentInfo" column="UAGENT_INFO" columnIndex="3"/>
+        <result property="browserCode" column="BROWSER_CODE" columnIndex="4"/>
+        <result property="browserNm" column="BROWSER_NM" columnIndex="5"/>
+        <result property="osCode" column="OS_CODE" columnIndex="6"/>
+        <result property="osNm" column="OS_NM" columnIndex="7"/>
+        <result property="recentCode" column="RECENT_CODE" columnIndex="8"/>
+        <result property="recentNm" column="RECENT_NM" columnIndex="9"/>
+        <result property="creatDt" column="CREAT_DT" columnIndex="10"/>
+        <result property="updtDt" column="UPDT_DT" columnIndex="11"/>
+    </resultMap>
+
+	<select id="DeviceIdentDAO.selectDeviceIdent" resultMap="DeviceIdent">
+		<![CDATA[		
+			SELECT	SN, MBER_ID, UAGENT_INFO, 
+					BROWSER_CODE, 
+					(	SELECT CODE_NM 
+						FROM COMTCCMMNDETAILCODE 
+						WHERE CODE_ID = 'COM083' 
+							AND USE_AT  = 'Y' 
+							AND CODE = BROWSER_CODE ) AS BROWSER_NM, 
+					OS_CODE, 
+					(	SELECT CODE_NM 
+						FROM COMTCCMMNDETAILCODE 
+						WHERE CODE_ID = 'COM084' 
+							AND USE_AT  = 'Y' 
+							AND CODE = OS_CODE ) AS OS_NM, 
+					RECENT_CODE, 
+					(	SELECT CODE_NM 
+						FROM COMTCCMMNDETAILCODE 
+						WHERE CODE_ID = 'COM085' 
+							AND USE_AT  = 'Y' 
+							AND CODE = RECENT_CODE ) AS RECENT_NM, 
+					CREAT_DT, UPDT_DT 
+			FROM	COMTNDEVICE
+			WHERE	SN=#sn#
+		]]>
+	</select>
+
+	<select id="DeviceIdentDAO.selectDeviceIdentList" parameterClass="DeviceIdentVO" resultClass="egovMap">
+		<![CDATA[
+			SELECT  * 
+              FROM  (
+            SELECT ROWNUM RNUM, ALL_LIST.* 
+              FROM  (
+		
+			SELECT
+				A.SN, A.MBER_ID, A.UAGENT_INFO, A.BROWSER_CODE, B.CODE_NM AS BROWSER_NM, A.OS_CODE, C.CODE_NM AS OS_NM, A.RECENT_CODE, D.CODE_NM AS RECENT_NM, A.CREAT_DT, A.UPDT_DT
+			FROM
+				COMTNDEVICE A, COMTCCMMNDETAILCODE B, COMTCCMMNDETAILCODE C, COMTCCMMNDETAILCODE D
+			WHERE
+				'COM083' = B.CODE_ID
+			AND A.BROWSER_CODE = B.CODE AND B.USE_AT  = 'Y'
+			AND 'COM084' = C.CODE_ID
+			AND A.OS_CODE = C.CODE AND C.USE_AT  = 'Y'
+			AND 'COM085' = D.CODE_ID
+			AND A.RECENT_CODE = D.CODE AND D.USE_AT  = 'Y'
+		]]>
+		<isEqual prepend="AND" property="searchCondition" compareValue="mberId">
+			MBER_ID LIKE '%'||#searchKeyword#||'%'
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="browserNm">
+			B.CODE_NM LIKE '%'||#searchKeyword#||'%'
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="osNm">
+			C.CODE_NM  LIKE '%'||#searchKeyword#||'%'
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="recentNm">
+			D.CODE_NM  LIKE '%'||#searchKeyword#||'%'
+		</isEqual>
+		<![CDATA[
+			ORDER BY SN DESC			
+                   ) ALL_LIST
+                   )
+            WHERE  RNUM  > #firstIndex#
+              AND  RNUM <= #firstIndex# + #recordCountPerPage#
+		]]>
+	</select>
+	
+	<select id="DeviceIdentDAO.selectDeviceIdentListTotCnt" parameterClass="DeviceIdentVO" resultClass="int">
+		<![CDATA[
+			SELECT
+				COUNT(A.SN)
+			FROM
+				COMTNDEVICE A, COMTCCMMNDETAILCODE B, COMTCCMMNDETAILCODE C, COMTCCMMNDETAILCODE D
+			WHERE
+				'COM083' = B.CODE_ID
+			AND A.BROWSER_CODE = B.CODE AND B.USE_AT  = 'Y'
+			AND 'COM084' = C.CODE_ID
+			AND A.OS_CODE = C.CODE AND C.USE_AT  = 'Y'
+			AND 'COM085' = D.CODE_ID
+			AND A.RECENT_CODE = D.CODE AND D.USE_AT  = 'Y'
+		]]>
+		<isEqual prepend="AND" property="searchCondition" compareValue="mberId">
+			MBER_ID LIKE '%'||#searchKeyword#||'%'
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="browserNm">
+			B.CODE_NM LIKE '%'||#searchKeyword#||'%'
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="osNm">
+			C.CODE_NM  LIKE '%'||#searchKeyword#||'%'
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="recentNm">
+			D.CODE_NM  LIKE '%'||#searchKeyword#||'%'
+		</isEqual>
+	</select>
+	
+	<insert id="DeviceIdentDAO.insertDeviceIdent">
+		<![CDATA[	
+			INSERT INTO COMTNDEVICE
+				(SN, MBER_ID, UAGENT_INFO, BROWSER_CODE, oS_CODE, RECENT_CODE, CREAT_DT, UPDT_DT) 
+			VALUES
+				( #sn#, #mberId#, #uagentInfo#, #browserCode#, #osCode#, #recentCode#, SYSDATE, SYSDATE )
+		]]>
+	</insert>
+
+	<update id="DeviceIdentDAO.updateDeviceIdent">
+		<![CDATA[
+			UPDATE	COMTNDEVICE SET
+					SN=#sn# 
+				  , UAGENT_INFO=#uagentInfo#
+				  , BROWSER_CODE=#browserCode#
+				  , OS_CODE=#osCode#
+				  , RECENT_CODE=#recentCode#
+				  , UPDT_DT=SYSDATE
+ 			WHERE  SN=#sn#
+		]]>
+	</update>
+	
+	<delete id="DeviceIdentDAO.deleteDeviceIdent">
+		<![CDATA[
+			DELETE FROM COMTNDEVICE 
+			WHERE  SN=#sn#
+		]]>
+	</delete>
+
+</sqlMap>
