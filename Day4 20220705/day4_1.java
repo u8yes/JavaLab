@@ -4,7 +4,7 @@ public class day4_1 {
         for(int j = 1; j <= 5; j++){
             System.out.printf("[%d,%d]", i, j);
         }
-        System.out.println();
+        System.out.println(); 
     }    
     }
 }
