@@ -9,11 +9,11 @@ public class Debug_err {
 		Scanner sc = new Scanner(System.in);
 		int testcase = sc.nextInt();
 		int answer = 0;
-		int a[] = new int[100001];
-		int S[] = new int[100001];
+		long A[] = new long[100000];
+		long S[] = new long[100000];
 		for (int i = 1; i < 10000; i++) {
-			a[i] = (int) (Math.random() * Integer.MAX_VALUE);
-			S[i] = S[i-1] + a[i];
+			A[i] = (int) (Math.random() * Integer.MAX_VALUE);
+			S[i] = S[i-1] + A[i];
 		}
 		for(int t = 1; t < testcase; t++) {
 			int query = sc.nextInt();
@@ -21,7 +21,7 @@ public class Debug_err {
 				int start = sc.nextInt();
 				int end = sc.nextInt();
 				answer += S[end] - S[start - 1];
-				System.out.println(testcase + " " + answer);
+				System.out.println(t + " " + answer);
 			}
 		}
 	}
