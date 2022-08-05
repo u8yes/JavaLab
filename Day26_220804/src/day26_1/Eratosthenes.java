@@ -16,7 +16,8 @@ public class Eratosthenes {
 			if(arr[k] == 0) {
 				int i = k;
 				System.out.println(i + "이 i 값");
-				
+				System.out.println(k + "이 k 값");
+
 				while( i <= 100 / k) {
 					arr[k * i] = 1;
 					i++;
